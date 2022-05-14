@@ -1,5 +1,8 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Instruction {
+    /// as the name says, not an actual instruction
+    InvalidInstruction(u16),
+
     SysJmp(u16),
     ClearScreen,
     Return,
@@ -82,4 +85,18 @@ pub enum Instruction {
     RegDumpI(u8),
 
     RegLoadI(u8)
+}
+
+impl core::fmt::Display for Instruction {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        use Instruction::*;
+        match self {
+            InvalidInstruction(r) => write!(f, "<.dw 0x{:04x}>", r), 
+            SysJmp(addr) => write!(f, "SYSJMP 0x{:x}", addr),
+            ClearScreen => write!(f, "CLS"),
+            Return => write!(f, "RET"),
+            Jump(addr) => write!(f, "JMP 0x{:x}", addr),
+            _ => write!(f, "<>")
+        }
+    }
 }

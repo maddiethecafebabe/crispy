@@ -1,6 +1,6 @@
 use sdl2::{
+    audio::{AudioCallback, AudioDevice, AudioSpecDesired},
     AudioSubsystem,
-    audio::{AudioCallback, AudioSpecDesired, AudioDevice},
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -45,22 +45,25 @@ impl Bell {
             samples: None,     // default sample size
         };
 
-        let device = audio_subsystem.open_playback(None, &desired_spec, |spec| {
-            Beeper {
+        let device = audio_subsystem
+            .open_playback(None, &desired_spec, |spec| Beeper {
                 phase_inc: 440.0 / spec.freq as f32,
                 phase: 0.0,
                 volume: 0.15,
-            }
-        }).unwrap();
+            })
+            .unwrap();
 
-        Self { status: PlayingStatus::Stopped, beeper: device }
+        Self {
+            status: PlayingStatus::Stopped,
+            beeper: device,
+        }
     }
 
     pub fn set_status(&mut self, status: PlayingStatus) {
         self.status = status;
         match status {
             PlayingStatus::Playing => self.beeper.resume(),
-            PlayingStatus::Stopped => self.beeper.pause()
+            PlayingStatus::Stopped => self.beeper.pause(),
         }
     }
 

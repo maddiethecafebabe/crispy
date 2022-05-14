@@ -1,15 +1,15 @@
 use crate::Instruction;
 
 struct RawParts {
-    pub low: u8,
-    pub nib0: u8,
-    pub nib1: u8,
-    pub nib2: u8,
-    pub nib3: u8,
-    pub nnn: u16, // last 12 bits
+    pub low: u8, //  bits 8..16
+    pub nib0: u8, // bits 0..4
+    pub nib1: u8, // bits 4..8
+    pub nib2: u8, // bits 8..12
+    pub nib3: u8, // bits 12..16
+    pub nnn: u16, // bits 4..16
 }
 
-pub fn decode(raw: u16) -> Option<Instruction> {
+pub fn decode(raw: u16) -> Instruction {
     let parts = {
         let lo = (raw & 0xff) as u8;
         let hi = ((raw >> 8) & 0x00ff) as u8;
@@ -24,13 +24,13 @@ pub fn decode(raw: u16) -> Option<Instruction> {
         }
     };
 
-    Some(match parts.nib0 {
+    match parts.nib0 {
         0 => {
             match parts.nib1 {
                 0x0 => match parts.low {
                     0xe0 => Instruction::ClearScreen,
                     0xee => Instruction::Return,
-                    _ => return None,
+                    _ => Instruction::InvalidInstruction(raw),
                 },
                 _ => Instruction::SysJmp(parts.nnn),
             }
@@ -41,7 +41,7 @@ pub fn decode(raw: u16) -> Option<Instruction> {
         4 => Instruction::SkipIfNotEqualImmidiate(parts.nib1, parts.low),
         5 => match parts.nib3 {
             0 => Instruction::SkipIfEqualRegister(parts.nib1, parts.nib2),
-            _ => return None,
+            _ => Instruction::InvalidInstruction(raw),
         },
         6 => Instruction::LoadImmidiate(parts.nib1, parts.low),
         7 => Instruction::AddImmidiate(parts.nib1, parts.low),
@@ -55,11 +55,11 @@ pub fn decode(raw: u16) -> Option<Instruction> {
             6 => Instruction::ShrRegister(parts.nib1, parts.nib2),
             7 => Instruction::SubnRegister(parts.nib1, parts.nib2),
             0xe => Instruction::ShlRegister(parts.nib1, parts.nib2),
-            _ => return None,
+            _ => Instruction::InvalidInstruction(raw),
         },
         9 => match parts.nib3 {
             0 => Instruction::SkipIfNotEqualRegister(parts.nib1, parts.nib2),
-            _ => return None,
+            _ => Instruction::InvalidInstruction(raw),
         },
         0xa => Instruction::LoadI(parts.nnn),
         0xb => Instruction::JumpV0(parts.nnn),
@@ -68,7 +68,7 @@ pub fn decode(raw: u16) -> Option<Instruction> {
         0xe => match parts.low {
             0x9e => Instruction::SkipIfPressed(parts.nib1),
             0xa1 => Instruction::SkipIfNotPressed(parts.nib1),
-            _ => return None,
+            _ => Instruction::InvalidInstruction(raw),
         }
         0xf => match parts.low {
             0x07 => Instruction::LoadDelayTimer(parts.nib1),
@@ -80,10 +80,10 @@ pub fn decode(raw: u16) -> Option<Instruction> {
             0x33 => Instruction::StoreDecimalI(parts.nib1),
             0x55 => Instruction::RegDumpI(parts.nib1),
             0x65 => Instruction::RegLoadI(parts.nib1),
-            _ => return None,
+            _ => Instruction::InvalidInstruction(raw),
         },
-        _ => return None,
-    })
+        _ => Instruction::InvalidInstruction(raw),
+    }
 }
 
 #[cfg(test)]
@@ -92,10 +92,10 @@ mod tests {
 
     macro_rules! instr {
         ($raw:literal => <none>) => {
-            assert_eq!(decode($raw), Option::None);
+            assert_eq!(decode($raw), InvalidInstruction($raw));
         };
         ($raw:literal => $res:expr) => {
-            assert_eq!(decode($raw), Some($res));
+            assert_eq!(decode($raw), $res);
         };
     }
 

@@ -20,6 +20,6 @@ fn main() {
     let opcodes = U16Iter(rom);
 
     for (idx, opcode) in opcodes.enumerate() {
-        println!("0x{idx:04x} | {:?}", instr::decode(opcode));
+        println!("0x{idx:04x} | {}", instr::decode(opcode));
     }
 }

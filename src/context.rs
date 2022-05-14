@@ -1,16 +1,13 @@
-use sdl2::{
-    Sdl, render::Canvas,
-    video::Window
-};
+use sdl2::{render::Canvas, video::Window, Sdl};
 
-use crate::{Bell, display::Display};
+use crate::{display::Display, Bell};
 
 pub struct Context {
     sdl_ctx: Sdl,
     canvas: Canvas<Window>,
     bell: Bell,
     image: Vec<u8>,
-    display: Display,
+    pub display: Option<Display>,
 }
 
 impl Context {
@@ -19,7 +16,8 @@ impl Context {
         let video_subsystem = sdl_context.video().unwrap();
         let audio_subsystem = sdl_context.audio().unwrap();
 
-        let canvas = video_subsystem.window("rust-sdl2 demo", 800, 600)
+        let canvas = video_subsystem
+            .window("crispi", 800, 600)
             .position_centered()
             .opengl()
             .build()
@@ -31,12 +29,12 @@ impl Context {
         let bell = Bell::new(&audio_subsystem);
         let display = Display::new();
 
-        Self { 
+        Self {
             sdl_ctx: sdl_context,
             canvas,
             bell,
             image,
-            display
+            display: Some(display),
         }
     }
 
@@ -54,17 +52,5 @@ impl Context {
 
     pub fn rom(&self) -> &[u8] {
         &self.image
-    }
-
-    pub fn display(&self) -> &Display {
-        &self.display
-    }
-
-    pub fn display_mut(&mut self) -> &mut Display {
-        &mut self.display
-    }
-
-    pub fn run(self, tick: impl Fn()) {
-        
     }
 }

@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 chip8_instruction = { version = "0.1.0", path = "chip8_instruction" }
 sdl2 = { version = "0.35.2", features = ["image", "mixer", "gfx", "ttf", "raw-window-handle"] }
+tracing = "0.1.34"
+tracing-subscriber = { version = "0.3.11", features = ["env-filter"] }
